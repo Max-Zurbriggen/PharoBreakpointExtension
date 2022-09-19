@@ -286,6 +286,24 @@ Breakpoint >> enable [
 	enabled := true
 ]
 
+{ #category : #accessing }
+Breakpoint >> group [
+
+	^ group
+]
+
+{ #category : #accessing }
+Breakpoint >> group: aString [
+
+	group := aString
+]
+
+{ #category : #api }
+Breakpoint >> groupTo: aString [
+	self group: aString
+
+]
+
 { #category : #initialization }
 Breakpoint >> initialize [
 	
