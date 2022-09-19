@@ -24,7 +24,8 @@ Class {
 		'#options',
 		'#targetInstance => WeakSlot',
 		'#oneShot',
-		'#enabled'
+		'#enabled',
+		'#group'
 	],
 	#classVars : [
 		'#AllBreakpoints'
