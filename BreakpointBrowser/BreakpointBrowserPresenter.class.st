@@ -46,9 +46,10 @@ BreakpointBrowserPresenter >> buildTableData: group [
 
 { #category : #initialization }
 BreakpointBrowserPresenter >> getAllBreakpointGroups [
+
 	| groups |
 
-	groups := (Breakpoint all collect: [ :bp | bp group ]) removeDuplicates .
+	groups := (Breakpoint all collect: [ :bp | bp group ]) removeDuplicates.
 	groups addFirst: 'All'.
 	^ groups
 ]
@@ -113,13 +114,15 @@ BreakpointBrowserPresenter >> initializeGroups [
 	breakpointGroups := self newList
 		headerTitle: 'Breakpoint Groups';
 		items: (self getAllBreakpointGroups);
-		whenSelectionChangedDo: [ :selection | self buildTableData: selection selectedItem ];
+		whenSelectionChangedDo: [ :selection | self buildTableData: selection selectedItem.  ];
 		yourself.
+
 ]
 
 { #category : #initialization }
 BreakpointBrowserPresenter >> initializePresenters [
 	self initializeGroups.
+	self getAllBreakpointGroups.
 	self initializeBreakpointTable.
 
 				
