@@ -25,7 +25,7 @@ Class {
 		'#targetInstance => WeakSlot',
 		'#oneShot',
 		'#enabled',
-		'#group'
+		'#properties'
 	],
 	#classVars : [
 		'#AllBreakpoints'
@@ -288,19 +288,22 @@ Breakpoint >> enable [
 
 { #category : #accessing }
 Breakpoint >> group [
-
-	^ group
+	"returns the group of the breakpoint. group is a value in the properties variable"
+	^ self property: #Group.
 ]
 
 { #category : #accessing }
 Breakpoint >> group: aString [
-
-	group := aString
+	"puts a new groupname in the properties dictionary"
+	
+	^ self property: #Group put: aString.
 ]
 
 { #category : #api }
 Breakpoint >> groupTo: aString [
-	self group: aString
+	"API to change the group"
+	aString class = ByteString ifFalse: [Error signal: 'group has to be a string'].
+	self group: aString.
 
 ]
 
@@ -308,7 +311,9 @@ Breakpoint >> groupTo: aString [
 Breakpoint >> initialize [
 	
 	self class initializeSlots: self.
-	options := #(+ optionCompileOnLinkInstallation)
+	options := #(+ optionCompileOnLinkInstallation).
+	properties := Dictionary new.
+	properties at: #Group put: 'no group'.
 ]
 
 { #category : #install }
@@ -401,6 +406,24 @@ Breakpoint >> options: anArray [
 	options := anArray
 ]
 
+{ #category : #accessing }
+Breakpoint >> properties [
+	^ properties
+
+]
+
+{ #category : #accessing }
+Breakpoint >> property: aSymbol [
+	^ properties at: aSymbol.
+
+]
+
+{ #category : #accessing }
+Breakpoint >> property: aSymbol put: anObject [
+	^ properties at: aSymbol put: anObject.
+
+]
+
 { #category : #removing }
 Breakpoint >> remove [
 
@@ -425,6 +448,12 @@ Breakpoint >> removeFromMethod: aMethod [
 Breakpoint >> removeFromNodeProperty [
 
 	self node removeBreakpoint: self
+]
+
+{ #category : #accessing }
+Breakpoint >> removeProperty: aSymbol [
+	^ properties removeKey: aSymbol .
+
 ]
 
 { #category : #api }
