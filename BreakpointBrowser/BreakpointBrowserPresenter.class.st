@@ -2,9 +2,8 @@ Class {
 	#name : #BreakpointBrowserPresenter,
 	#superclass : #SpPresenter,
 	#instVars : [
-		'breakpointGroups',
-		'selectedGroup',
-		'selectedMethod',
+		'bpGroupsList',
+		'methodCode',
 		'breakpointsTable'
 	],
 	#category : #BreakpointBrowser
@@ -16,10 +15,10 @@ BreakpointBrowserPresenter class >> defaultLayout [
 	^ SpPanedLayout newTopToBottom
 		  add: (SpPanedLayout newHorizontal
 				   positionOfSlider: 30 percent;
-				   add: #breakpointGroups;
+				   add: #bpGroupsList;
 				   add: #breakpointsTable;
 				   yourself);
-		  add: #selectedMethod;
+		  add: #methodCode;
 		  yourself
 ]
 
@@ -37,24 +36,64 @@ BreakpointBrowserPresenter class >> menuCommandOn: aBuilder [
 	aBuilder withSeparatorAfter
 ]
 
+{ #category : #initialization }
+BreakpointBrowserPresenter >> breakpointContextMenu [
+	^ self newMenu
+		addGroup: [ :aGroup | 
+			aGroup
+				addItem: [ :anItem | 
+					anItem
+						name: 'Change group';
+						description: 'Opens a window to change the group of this breakpoint';
+						action: [ 
+							self changeBreakpointGroup: (breakpointsTable selectedItem ).  
+							self updateBreakpointGroups.
+							breakpointsTable refresh.] ];
+				addItem: [ :anItem | 
+					anItem
+						name: 'Remove';
+						description: 'Remove this breakpoint';
+						action: [ breakpointsTable selectedItem remove. 
+							self updateBreakpointGroups.
+							breakpointsTable refresh. ] ];
+				addItem: [ :anItem | 
+					anItem
+						name: 'Enable';
+						description: 'Enable this breakpoint';
+						visibleIf: [ breakpointsTable selectedItem isEnabled not];
+						action: [ breakpointsTable selectedItem enable. breakpointsTable refresh. ] ];
+				addItem: [ :anItem | 
+					anItem
+						name: 'Disable';
+						description: 'Disable this breakpoint';
+						visibleIf: [ breakpointsTable selectedItem isEnabled ];
+						action: [ breakpointsTable selectedItem disable. breakpointsTable refresh. ] ].
+			]
+]
+
 { #category : #presenters }
 BreakpointBrowserPresenter >> buildTableData: group [
 	group = 'All' 
-		ifTrue: [ breakpointsTable items: Breakpoint all. ]
-		ifFalse: [ breakpointsTable items: (Breakpoint all select: [ :bp | bp group = group ] ). ]
+		ifTrue: [ ^breakpointsTable items: Breakpoint all. ]
+		ifFalse: [ ^breakpointsTable items: (Breakpoint all select: [ :bp | bp group = group ] ). ]
 ]
 
-{ #category : #initialization }
-BreakpointBrowserPresenter >> getAllBreakpointGroups [
-
-	| groups |
-
-	groups := (Breakpoint all collect: [ :bp | bp group ]) removeDuplicates.
-	groups addFirst: 'All'.
-	^ groups
+{ #category : #'ui - requests' }
+BreakpointBrowserPresenter >> changeBreakpointGroup: aBreakpoint [
+	"popup to change the group of a breakpoint"
+	| textInput |
+	textInput := SpRequestTextDialog new.
+	textInput 
+	title: 'Enter group name';
+	extent: 300 @ 160;
+	text: aBreakpoint group;
+	acceptLabel: 'Accept';
+	label: 'enter new group name for this breakpoint';
+	onAccept: [aBreakpoint group: (textInput text)];
+	openModal.
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #private }
 BreakpointBrowserPresenter >> getBreakpointClass: aBreakpoint [
 	
 	^ aBreakpoint isObjectCentric
@@ -67,7 +106,7 @@ BreakpointBrowserPresenter >> getBreakpointClass: aBreakpoint [
 
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #private }
 BreakpointBrowserPresenter >> getBreakpointTarget: aBreakpoint [
 	^ aBreakpoint printTargetForBreakpointInspection.
 
@@ -105,16 +144,15 @@ BreakpointBrowserPresenter >> initializeBreakpointTable [
 			(SpStringTableColumn
 				title: 'Group'
 				evaluated: [ :item | item group]);
-
+		contextMenu: self breakpointContextMenu;
 		whenSelectionChangedDo: [ :selection | self updateMethodSourceCode: selection selectedItem ].
 ]
 
 { #category : #initialization }
 BreakpointBrowserPresenter >> initializeGroups [
-	breakpointGroups := self newList
+	bpGroupsList := self newList
 		headerTitle: 'Breakpoint Groups';
-		items: (self getAllBreakpointGroups);
-		whenSelectionChangedDo: [ :selection | self buildTableData: selection selectedItem.  ];
+		whenSelectionChangedDo: [ :selection | self updateBreakpointGroups. self buildTableData: selection selectedItem. "breakpointsTable refresh."];
 		yourself.
 
 ]
@@ -122,11 +160,14 @@ BreakpointBrowserPresenter >> initializeGroups [
 { #category : #initialization }
 BreakpointBrowserPresenter >> initializePresenters [
 	self initializeGroups.
-	self getAllBreakpointGroups.
 	self initializeBreakpointTable.
-
-				
-	selectedMethod := self newCode 
+	
+	
+	self updateBreakpointGroups.
+	"bpGroupsList selectIndex: 1."
+	
+		
+	methodCode := self newCode 
 		beNotEditable
 		yourself.
 ]
@@ -140,10 +181,24 @@ BreakpointBrowserPresenter >> initializeWindow: aWindowPresenter [
 		initialExtent: 800@400
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #updating }
+BreakpointBrowserPresenter >> updateBreakpointGroups [
+	"updates the list of breakpoint groups"
+	| groups |
+
+	groups := (Breakpoint all collect: [ :bp | bp group ]) removeDuplicates.
+	groups addFirst: 'All'.
+	bpGroupsList items: groups.
+	bpGroupsList selectIndex: 1.
+	
+
+
+]
+
+{ #category : #updating }
 BreakpointBrowserPresenter >> updateMethodSourceCode: aBreakpoint [
 	aBreakpoint ifNil:  [^self].
-	selectedMethod text: aBreakpoint printContentsForBreakpointInspection
+	methodCode text: aBreakpoint printContentsForBreakpointInspection
 	
 
 

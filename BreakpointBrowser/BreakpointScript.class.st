@@ -28,14 +28,14 @@ BreakpointScript >> code: aString [
 
 { #category : #initialization }
 BreakpointScript >> delete [ 
-	self class all remove: self.
+	AllBreakpointScripts remove: self.
 ]
 
 { #category : #initialization }
 BreakpointScript >> initialize [ 
 	self code: ''.
 	self name: 'Scriptname'.
-	self class all add: self
+	AllBreakpointScripts add: self.
 ]
 
 { #category : #accessing }
