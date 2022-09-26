@@ -78,7 +78,7 @@ BreakpointBrowserPresenter >> buildTableData: group [
 		ifFalse: [ ^breakpointsTable items: (Breakpoint all select: [ :bp | bp group = group ] ). ]
 ]
 
-{ #category : #'ui - requests' }
+{ #category : #'ui - dialogs' }
 BreakpointBrowserPresenter >> changeBreakpointGroup: aBreakpoint [
 	"popup to change the group of a breakpoint"
 	| textInput |
