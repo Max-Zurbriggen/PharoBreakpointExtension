@@ -180,6 +180,10 @@ BreakpointBrowserPresenter >> initializePresenters [
 	methodCode := self newCode 
 		beNotEditable
 		yourself.
+		
+	
+	SystemAnnouncer uniqueInstance weak when: BreakpointAdded send: #updateBreakpointGroups to: self.
+	SystemAnnouncer uniqueInstance weak when: BreakpointRemoved send: #updateBreakpointGroups to: self.
 ]
 
 { #category : #initialization }

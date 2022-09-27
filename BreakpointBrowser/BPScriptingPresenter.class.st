@@ -2,7 +2,6 @@ Class {
 	#name : #BPScriptingPresenter,
 	#superclass : #BreakpointBrowserPresenter,
 	#instVars : [
-		'completeScriptLayout',
 		'expandButton',
 		'scriptList',
 		'scriptCode',
@@ -68,7 +67,7 @@ BPScriptingPresenter >> changeScriptName: aScript [
 	openModal."
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #actions }
 BPScriptingPresenter >> collapseAction [
 
 	^[	self layout remove: self layout presenters last. 
@@ -100,17 +99,13 @@ BPScriptingPresenter >> createScriptPresenterLayout [
 
 { #category : #actions }
 BPScriptingPresenter >> deleteScript [
-
-	|selection |
+ 
 	scriptList selectedItem ifNotNil: [ 
-		selection := scriptList selectedItem.
-		scriptList selectIndex:0.
-		selection delete.
-		scriptList refresh.
-	]
+		scriptList selectedItem delete.
+		scriptList updateList ]
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #actions }
 BPScriptingPresenter >> expandAction [
 
 	^[ self layout add: self createScriptPresenterLayout. 
@@ -139,6 +134,7 @@ BPScriptingPresenter >> initializePresenters [
 	self initializeToolbar.
 	self initializeScriptList.
 	self initializeScriptCode .
+	
 	
 
 ]
