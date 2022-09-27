@@ -1,3 +1,6 @@
+"
+I am a Breakpoint Browser to manage breakpoints more easily.
+"
 Class {
 	#name : #BreakpointBrowserPresenter,
 	#superclass : #SpPresenter,
@@ -26,18 +29,18 @@ BreakpointBrowserPresenter class >> defaultLayout [
 BreakpointBrowserPresenter class >> menuCommandOn: aBuilder [
 
 	<worldMenu>
-	(aBuilder item: #'My Breakpoint Browser')
+	(aBuilder item: #'Breakpoint Browser')
 		parent: #Debug;
 		action: [ self new open ];
-		order: -2;
+		order: -3;
 		help:
-			'My Breakpoint Browser';
+			'for more information contact max.zurbriggen@uzh.ch';
 		icon: (self iconNamed: #glamorousBug).
-	aBuilder withSeparatorAfter
 ]
 
 { #category : #initialization }
 BreakpointBrowserPresenter >> breakpointContextMenu [
+	"context menu for changing groups, removing, enabling/disabling breakpoints"
 	^ self newMenu
 		addGroup: [ :aGroup | 
 			aGroup
@@ -73,6 +76,7 @@ BreakpointBrowserPresenter >> breakpointContextMenu [
 
 { #category : #presenters }
 BreakpointBrowserPresenter >> buildTableData: group [
+	"set the items of the breakpoints table to match the selected group"
 	group = 'All' 
 		ifTrue: [ ^breakpointsTable items: Breakpoint all. ]
 		ifFalse: [ ^breakpointsTable items: (Breakpoint all select: [ :bp | bp group = group ] ). ]
@@ -90,6 +94,7 @@ BreakpointBrowserPresenter >> changeBreakpointGroup: aBreakpoint [
 		title: 'Enter group name'.
 	textInput isEmptyOrNil ifFalse: [ aBreakpoint group: textInput ].
 
+	"alternative popup:"
 
 	"| textInput |
 	textInput := SpRequestTextDialog new.
@@ -105,7 +110,7 @@ BreakpointBrowserPresenter >> changeBreakpointGroup: aBreakpoint [
 
 { #category : #private }
 BreakpointBrowserPresenter >> getBreakpointClass: aBreakpoint [
-	
+	"returns the class where a breakpoint is attached"
 	^ aBreakpoint isObjectCentric
 		ifTrue: [ aBreakpoint targetInstance ]
 		ifFalse: [ 
@@ -118,13 +123,14 @@ BreakpointBrowserPresenter >> getBreakpointClass: aBreakpoint [
 
 { #category : #private }
 BreakpointBrowserPresenter >> getBreakpointTarget: aBreakpoint [
+	"returns the target of a breakpoint"
 	^ aBreakpoint printTargetForBreakpointInspection.
 
 ]
 
 { #category : #initialization }
 BreakpointBrowserPresenter >> initializeBreakpointTable [
-	"List of methods in which a breakpoint is installed"
+	"creates a table of breakpoints with some of their properties"
 
 	breakpointsTable := self newTable.
 	breakpointsTable 
@@ -160,11 +166,13 @@ BreakpointBrowserPresenter >> initializeBreakpointTable [
 
 { #category : #initialization }
 BreakpointBrowserPresenter >> initializeGroups [
+	"initializes the breakpoint groups list"
 	bpGroupsList := self newList
 		headerTitle: 'Breakpoint Groups';
-		whenSelectionChangedDo: [ :selection | self updateBreakpointGroups. self buildTableData: selection selectedItem. "breakpointsTable refresh."];
-		yourself.
-
+		whenSelectionChangedDo: [ :selection | 
+			self updateBreakpointGroups.
+			self buildTableData: selection selectedItem "breakpointsTable refresh." ];
+		yourself
 ]
 
 { #category : #initialization }
@@ -172,10 +180,7 @@ BreakpointBrowserPresenter >> initializePresenters [
 	self initializeGroups.
 	self initializeBreakpointTable.
 	
-	
 	self updateBreakpointGroups.
-	"bpGroupsList selectIndex: 1."
-	
 		
 	methodCode := self newCode 
 		beNotEditable
@@ -197,7 +202,7 @@ BreakpointBrowserPresenter >> initializeWindow: aWindowPresenter [
 
 { #category : #updating }
 BreakpointBrowserPresenter >> updateBreakpointGroups [
-	"updates the list of breakpoint groups"
+	"updates the list of breakpoint groups and adds 'All' as an option"
 	| groups |
 
 	groups := (Breakpoint all collect: [ :bp | bp group ]) removeDuplicates.
@@ -211,6 +216,7 @@ BreakpointBrowserPresenter >> updateBreakpointGroups [
 
 { #category : #updating }
 BreakpointBrowserPresenter >> updateMethodSourceCode: aBreakpoint [
+	"updates the code window to display the code where the breakpoint is attached"
 	aBreakpoint ifNil:  [^self].
 	methodCode text: aBreakpoint printContentsForBreakpointInspection
 	

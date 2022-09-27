@@ -1,3 +1,6 @@
+"
+I am a script (code) used in the BPScriptingPresenter where I can be managed and run.
+"
 Class {
 	#name : #BreakpointScript,
 	#superclass : #Object,
