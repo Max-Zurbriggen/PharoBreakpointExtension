@@ -81,7 +81,17 @@ BreakpointBrowserPresenter >> buildTableData: group [
 { #category : #'ui - dialogs' }
 BreakpointBrowserPresenter >> changeBreakpointGroup: aBreakpoint [
 	"popup to change the group of a breakpoint"
+	
 	| textInput |
+	textInput := aBreakpoint group.
+	textInput := UIManager default 
+		request: 'Enter new name for this script:'
+		initialAnswer: textInput
+		title: 'Enter group name'.
+	textInput isEmptyOrNil ifFalse: [ aBreakpoint group: textInput ].
+
+
+	"| textInput |
 	textInput := SpRequestTextDialog new.
 	textInput 
 	title: 'Enter group name';
@@ -90,7 +100,7 @@ BreakpointBrowserPresenter >> changeBreakpointGroup: aBreakpoint [
 	acceptLabel: 'Accept';
 	label: 'enter new group name for this breakpoint';
 	onAccept: [aBreakpoint group: (textInput text)];
-	openModal.
+	openModal."
 ]
 
 { #category : #private }

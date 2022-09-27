@@ -34,7 +34,7 @@ BreakpointScript >> delete [
 { #category : #initialization }
 BreakpointScript >> initialize [ 
 	self code: ''.
-	self name: 'Scriptname'.
+	self name: 'unnamed script'.
 	AllBreakpointScripts add: self.
 ]
 

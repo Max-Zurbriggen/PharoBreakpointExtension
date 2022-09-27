@@ -14,16 +14,20 @@ Class {
 { #category : #layout }
 BPScriptingPresenter class >> defaultLayout [
 
-	^ SpPanedLayout newTopToBottom
-		  add: super defaultLayout;
-		  add: (SpBoxLayout newTopToBottom
+	^ SpBoxLayout newTopToBottom
+		  add: (SpBoxLayout newTopToBottom 
+		add: super defaultLayout;
+		add:#expandButton height: 25;
+		yourself);
+		"positionOfSlider: 365;"
+		  "add: (SpBoxLayout newTopToBottom
 				   add: #expandButton height: 25;
 				   add: #buttonToolbar height: 50;
 				   add: (SpPanedLayout newTopToBottom
 						    add: #scriptList;
 						    add: #scriptCode;
 						    yourself);
-				   yourself);
+				   yourself);"
 		  yourself
 ]
 
@@ -43,7 +47,16 @@ BPScriptingPresenter class >> menuCommandOn: aBuilder [
 
 { #category : #'ui - dialogs' }
 BPScriptingPresenter >> changeScriptName: aScript [
+	
 	| textInput |
+	textInput := 'new script name'.
+	textInput := UIManager default 
+		request: 'Enter new name for this script:'
+		initialAnswer: textInput
+		title: 'Enter new script name'.
+	textInput isEmptyOrNil ifFalse: [ aScript name: textInput ].
+	
+	"| textInput |
 	textInput := SpRequestTextDialog new.
 	textInput 
 	title: 'Enter script name';
@@ -52,43 +65,68 @@ BPScriptingPresenter >> changeScriptName: aScript [
 	acceptLabel: 'Accept';
 	label: 'enter new name for this script';
 	onAccept: [aScript name: (textInput text)];
-	openModal.
+	openModal."
+]
+
+{ #category : #'as yet unclassified' }
+BPScriptingPresenter >> collapseAction [
+
+	^[	self layout remove: self layout presenters last. 
+		expandButton action: self expandAction.
+		expandButton label: '▼ Expand Breakpoint Script UI ▼'.
+		self window resize: (self window window extent)-(0@400) ]
 ]
 
 { #category : #initialization }
 BPScriptingPresenter >> connectPresenters [ 
-
-	scriptList transmitTo: scriptCode transform: [ :bps | bps code ].
+	scriptList whenSelectionChangedDo: [ :bps | scriptList selectedItem ifNotNil:[ scriptCode  text: bps selectedItem code] ].
+	"scriptList transmitTo: scriptCode transform: [ :bps | bps ifNotNil: [bps code] ]."
 ]
 
 { #category : #ui }
 BPScriptingPresenter >> createScriptPresenterLayout [
 
-	| scriptLayout |
-	scriptLayout := self newBoxLayoutTopToBottom .
-	scriptLayout 
-			add: #buttonToolbar height: 50;
-			add: (SpPanedLayout  newTopToBottom
-			add: #scriptList;
-			add: #scriptCode;
-			yourself).
-			
-			
-	^ scriptLayout 
+	^ self class new
+		layout: (SpBoxLayout newTopToBottom
+				   add: #buttonToolbar height: 50;
+				   add: (SpPanedLayout newTopToBottom
+						add: #scriptList;
+						add: #scriptCode;
+						yourself);
+					yourself);
+			yourself.
+
 ]
 
 { #category : #actions }
 BPScriptingPresenter >> deleteScript [
-	scriptList selectedItem delete.
-	scriptList refresh.
+
+	|selection |
+	scriptList selectedItem ifNotNil: [ 
+		selection := scriptList selectedItem.
+		scriptList selectIndex:0.
+		selection delete.
+		scriptList refresh.
+	]
+]
+
+{ #category : #'as yet unclassified' }
+BPScriptingPresenter >> expandAction [
+
+	^[ self layout add: self createScriptPresenterLayout. 
+		expandButton action: self collapseAction.
+		expandButton label: '▲ Collapse Breakpoint Script UI ▲'.
+		self window resize: (self window window extent)+(0@400) ]
 ]
 
 { #category : #initialization }
 BPScriptingPresenter >> initializeExpandButton [
 			
 	expandButton := self newButton
-	label: 'expand';
-	action: [ self layout add: self createScriptPresenterLayout].
+	label: '▼ Expand Breakpoint Script UI ▼'.
+	expandButton action: self expandAction .
+	
+
 ]
 
 { #category : #initialization }
@@ -162,7 +200,7 @@ BPScriptingPresenter >> initializeWindow: aWindowPresenter [
 	aWindowPresenter
 		title: 'Breakpoint Browser';		
 		windowIcon: (self application iconNamed: #glamorousBug);
-		initialExtent: 800@800
+		initialExtent: 800@400
 ]
 
 { #category : #'instance creation' }
@@ -173,14 +211,16 @@ BPScriptingPresenter >> newScript [
 
 { #category : #actions }
 BPScriptingPresenter >> runScript [
-	scriptList selectedItem run.
-	breakpointsTable refresh.
+	scriptList selectedItem ifNotNil: [ 
+		scriptList selectedItem run.
+		breakpointsTable refresh.
+	 ]
 ]
 
 { #category : #actions }
 BPScriptingPresenter >> saveScript [
-	scriptList selectedItem ifNil: [ ^self ].
-	scriptList selectedItem code: (scriptCode text).
+	scriptList selectedItem ifNotNil: [ scriptList selectedItem code: (scriptCode text) ].
+	
 ]
 
 { #category : #ui }
