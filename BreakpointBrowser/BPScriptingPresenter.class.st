@@ -106,6 +106,7 @@ BPScriptingPresenter >> initializeScriptCode [
 
 	scriptCode := self newCode
 		whenTextChangedDo: [ self saveScript ];
+		beForScripting;
 		yourself.
 ]
 

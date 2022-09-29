@@ -15,9 +15,9 @@ Class {
 { #category : #layout }
 BreakpointBrowserPresenter class >> defaultLayout [
 
-	^ SpPanedLayout newTopToBottom
+	^ 	SpPanedLayout newTopToBottom
 		  add: (SpPanedLayout newHorizontal
-				   positionOfSlider: 30 percent;
+				   positionOfSlider: 17 percent;
 				   add: #bpGroupsList;
 				   add: #breakpointsTable;
 				   yourself);
@@ -146,6 +146,7 @@ BreakpointBrowserPresenter >> initializeBreakpointTable [
 			((SpStringTableColumn
 				title: 'Type'
 				evaluated: [ :item | item class ])
+				width: 110;
 				yourself);
 		addColumn:
 			((SpStringTableColumn
@@ -157,11 +158,14 @@ BreakpointBrowserPresenter >> initializeBreakpointTable [
 				title: 'Target'
 				evaluated: [ :item | self getBreakpointTarget: item]);
 		addColumn:
-			(SpStringTableColumn
+			((SpStringTableColumn
 				title: 'Group'
-				evaluated: [ :item | item group]);
-		contextMenu: self breakpointContextMenu;
-		whenSelectionChangedDo: [ :selection | self updateMethodSourceCode: selection selectedItem ].
+				evaluated: [ :item | item group]) 
+				width: 100; 
+				yourself);
+		contextMenu: self breakpointContextMenu.
+		
+	breakpointsTable whenSelectionChangedDo: [ :selection | self updateMethodSourceCode: selection selectedItem ].
 ]
 
 { #category : #initialization }
@@ -217,9 +221,25 @@ BreakpointBrowserPresenter >> updateBreakpointGroups [
 { #category : #updating }
 BreakpointBrowserPresenter >> updateMethodSourceCode: aBreakpoint [
 	"updates the code window to display the code where the breakpoint is attached"
-	aBreakpoint ifNil:  [^self].
-	methodCode text: aBreakpoint printContentsForBreakpointInspection
 	
+	"methodCode text: aBreakpoint printContentsForBreakpointInspection"
+	
+	aBreakpoint ifNil:  [^self].
+	
+	aBreakpoint isVariableBreakpoint 
+		ifTrue: [ 
+			methodCode text: ( (((SortedCollection sortBlock: [ :a :b | 
+				a methodClass name < b methodClass name ])
+				addAll: (aBreakpoint targetMethodsToNodesMap ) keys;
+				yourself) at:1) sourceCode).
+			methodCode beForBehavior: aBreakpoint targetClassOrMethod ]
+		ifFalse: [ 
+			methodCode text: aBreakpoint node methodNode method sourceCode.
+			methodCode beForBehavior:	aBreakpoint node methodNode method ]
+	
+	
+	
+
 
 
 ]
