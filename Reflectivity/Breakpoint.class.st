@@ -25,7 +25,9 @@ Class {
 		'#targetInstance => WeakSlot',
 		'#oneShot',
 		'#enabled',
-		'#properties'
+		'#properties',
+		'#onCount',
+		'#count'
 	],
 	#classVars : [
 		'#AllBreakpoints'
@@ -248,6 +250,7 @@ Breakpoint >> breakInContext: aContext node: aNode [
 	
 	 self class notifyBreakpointHit: self inContext: aContext node: aNode.
 	 self isEnabled ifFalse: [ ^ self ].
+	 self isOnCount ifTrue: [ (self increaseCount = self breakOnCount) ifFalse: [^ self]].
 	 self oneShot ifTrue: [ self disable ].
 	 Break break
 ]
@@ -269,11 +272,28 @@ Breakpoint >> breakLinkConditional [
 	^self breakLink condition: condition arguments: #(context)
 ]
 
+{ #category : #'as yet unclassified' }
+Breakpoint >> breakOnCount [
+
+	properties at: #breakOnCount ifAbsent: 0.
+]
+
+{ #category : #'as yet unclassified' }
+Breakpoint >> breakOnCount: anInterger [
+
+	properties at: #breakOnCount put: anInterger
+]
+
 { #category : #api }
 Breakpoint >> condition: aCondition [
 
 	condition := aCondition.
 	self link: self breakLinkConditional
+]
+
+{ #category : #accessing }
+Breakpoint >> count [
+	^properties at: #count ifAbsent: 0.
 ]
 
 { #category : #api }
@@ -282,8 +302,18 @@ Breakpoint >> disable [
 ]
 
 { #category : #api }
+Breakpoint >> disableOnCount [
+	onCount := false.
+]
+
+{ #category : #api }
 Breakpoint >> enable [
 	enabled := true
+]
+
+{ #category : #api }
+Breakpoint >> enableOnCount [
+	onCount := true.
 ]
 
 { #category : #accessing }
@@ -305,6 +335,12 @@ Breakpoint >> groupTo: aString [
 	aString class = ByteString ifFalse: [Error signal: 'group has to be a string'].
 	self group: aString.
 
+]
+
+{ #category : #'as yet unclassified' }
+Breakpoint >> increaseCount [
+
+	^properties at: #count put: (self count + 1)
 ]
 
 { #category : #initialization }
@@ -338,6 +374,12 @@ Breakpoint >> isEnabled [
 Breakpoint >> isObjectCentric [
 
 	^ self targetInstance notNil
+]
+
+{ #category : #testing }
+Breakpoint >> isOnCount [
+
+	^ onCount ifNil: [ onCount := false ]
 ]
 
 { #category : #testing }
