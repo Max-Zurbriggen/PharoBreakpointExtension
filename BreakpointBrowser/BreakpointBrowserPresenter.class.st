@@ -74,10 +74,10 @@ BreakpointBrowserPresenter >> breakpointContextMenu [
 			]
 ]
 
-{ #category : #presenters }
+{ #category : #private }
 BreakpointBrowserPresenter >> buildTableData: group [
 	"set the items of the breakpoints table to match the selected group"
-	group = 'All' 
+	^ group = 'All' 
 		ifTrue: [ ^breakpointsTable items: Breakpoint all. ]
 		ifFalse: [ ^breakpointsTable items: (Breakpoint all select: [ :bp | bp group = group ] ). ]
 ]

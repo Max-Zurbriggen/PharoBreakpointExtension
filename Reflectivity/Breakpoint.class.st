@@ -340,7 +340,8 @@ Breakpoint >> groupTo: aString [
 { #category : #'as yet unclassified' }
 Breakpoint >> increaseCount [
 
-	^properties at: #count put: (self count + 1)
+	properties at: #count put: (self count + 1).
+	^self count
 ]
 
 { #category : #initialization }
