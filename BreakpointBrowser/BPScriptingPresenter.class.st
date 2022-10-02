@@ -12,23 +12,6 @@ Class {
 	#category : #BreakpointBrowser
 }
 
-{ #category : #layout }
-BPScriptingPresenter class >> defaultLayout [
-
-	^ SpPanedLayout newTopToBottom
-		  add: (SpBoxLayout newTopToBottom 
-		add: super defaultLayout;
-		yourself);
-		add: (SpBoxLayout newTopToBottom
-				   add: #buttonToolbar height: 50;
-				   add: (SpPanedLayout newTopToBottom
-						add: #scriptList;
-						add: #scriptCode;
-						yourself);
-					yourself);
-		  yourself
-]
-
 { #category : #specs }
 BPScriptingPresenter class >> menuCommandOn: aBuilder [
 
@@ -48,7 +31,7 @@ BPScriptingPresenter >> changeScriptName: aScript [
 	"opens a popup to enter a new script name"
 	| textInput |
 	textInput := 'new script name'.
-	textInput := UIManager default 
+	textInput := self application newRequestText
 		request: 'Enter new name for this script:'
 		initialAnswer: textInput
 		title: 'Enter new script name'.
@@ -79,12 +62,45 @@ BPScriptingPresenter >> connectPresenters [
 	"scriptList transmitTo: scriptCode transform: [ :bps | bps ifNotNil: [bps code] ]."
 ]
 
+{ #category : #layout }
+BPScriptingPresenter >> defaultLayout [
+
+	^ SpPanedLayout newTopToBottom
+		  add: (SpBoxLayout newTopToBottom 
+		add: super defaultLayout;
+		yourself);
+		add: (SpBoxLayout newTopToBottom
+				   add: buttonToolbar height: 50;
+				   add: (SpPanedLayout newTopToBottom
+						add: scriptList;
+						add: scriptCode;
+						yourself);
+					yourself);
+		  yourself
+]
+
 { #category : #actions }
-BPScriptingPresenter >> deleteScript [
+BPScriptingPresenter >> doDeleteScript [
 	"deletes the selected script"
 	scriptList selectedItem ifNotNil: [ 
 		scriptList selectedItem delete.
 		scriptList updateList ]
+]
+
+{ #category : #actions }
+BPScriptingPresenter >> doNewScript [
+	"creates a new script"
+	BreakpointScript new.
+	scriptList refresh.
+]
+
+{ #category : #actions }
+BPScriptingPresenter >> doRunScript [
+	"runs the selected script"
+	scriptList selectedItem ifNotNil: [ 
+		scriptList selectedItem run.
+		breakpointsTable refresh.
+	 ]
 ]
 
 { #category : #initialization }
@@ -129,19 +145,19 @@ BPScriptingPresenter >> initializeToolbar [
 			label: 'Do it';
 			icon: (self iconNamed: #smallDoIt);
 			help: 'run the selected script';
-			action: [ self runScript ];
+			action: [ self doRunScript ];
 			yourself);
 		addItem: (SpToolbarButtonPresenter new
 			label: 'New';
 			icon: (self iconNamed: #smallNew);
 			help: 'create a new script';
-			action: [ self newScript ];
+			action: [ self doNewScript ];
 			yourself);
 		addItem: (SpToolbarButtonPresenter new
 			label: 'Delete';
 			icon: (self iconNamed: #smallDelete);
 			help: 'delete the selected script';
-			action: [ self deleteScript ];
+			action: [ self doDeleteScript ];
 			yourself);
 
 		yourself.
@@ -154,22 +170,6 @@ BPScriptingPresenter >> initializeWindow: aWindowPresenter [
 		title: 'Breakpoint Browser';		
 		windowIcon: (self application iconNamed: #glamorousBug);
 		initialExtent: 800@800
-]
-
-{ #category : #'instance creation' }
-BPScriptingPresenter >> newScript [
-	"creates a new script"
-	BreakpointScript new.
-	scriptList refresh.
-]
-
-{ #category : #actions }
-BPScriptingPresenter >> runScript [
-	"runs the selected script"
-	scriptList selectedItem ifNotNil: [ 
-		scriptList selectedItem run.
-		breakpointsTable refresh.
-	 ]
 ]
 
 { #category : #actions }

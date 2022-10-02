@@ -25,9 +25,10 @@ Class {
 		'#targetInstance => WeakSlot',
 		'#oneShot',
 		'#enabled',
-		'#properties',
+		'#group',
 		'#onCount',
-		'#count'
+		'#count',
+		'#breakOnCount'
 	],
 	#classVars : [
 		'#AllBreakpoints'
@@ -250,7 +251,7 @@ Breakpoint >> breakInContext: aContext node: aNode [
 	
 	 self class notifyBreakpointHit: self inContext: aContext node: aNode.
 	 self isEnabled ifFalse: [ ^ self ].
-	 self isOnCount ifTrue: [ (self increaseCount = self breakOnCount) ifFalse: [^ self]].
+	 self onCount ifTrue: [ (self increaseCount = self breakOnCount) ifFalse: [^ self]].
 	 self oneShot ifTrue: [ self disable ].
 	 Break break
 ]
@@ -275,13 +276,19 @@ Breakpoint >> breakLinkConditional [
 { #category : #'as yet unclassified' }
 Breakpoint >> breakOnCount [
 
-	properties at: #breakOnCount ifAbsent: 0.
+	^breakOnCount ifNil:[ breakOnCount := 0].
 ]
 
 { #category : #'as yet unclassified' }
 Breakpoint >> breakOnCount: anInterger [
 
-	properties at: #breakOnCount put: anInterger
+	breakOnCount := anInterger.
+]
+
+{ #category : #TODO }
+Breakpoint >> condition [
+	"this method doesnt really work well yet because the condition is not just the condition text but a collection"
+	^ condition .
 ]
 
 { #category : #api }
@@ -293,7 +300,13 @@ Breakpoint >> condition: aCondition [
 
 { #category : #accessing }
 Breakpoint >> count [
-	^properties at: #count ifAbsent: 0.
+	^count ifNil: [ count := 0 ].
+]
+
+{ #category : #accessing }
+Breakpoint >> count: anInteger [
+	
+	^count := anInteger.
 ]
 
 { #category : #api }
@@ -302,55 +315,48 @@ Breakpoint >> disable [
 ]
 
 { #category : #api }
-Breakpoint >> disableOnCount [
-	onCount := false.
-]
-
-{ #category : #api }
 Breakpoint >> enable [
 	enabled := true
 ]
 
 { #category : #api }
-Breakpoint >> enableOnCount [
-	onCount := true.
+Breakpoint >> enabled: aBoolean [
+	enabled := aBoolean
 ]
 
 { #category : #accessing }
 Breakpoint >> group [
 	"returns the group of the breakpoint. group is a value in the properties variable"
-	^ self property: #Group.
+	^ group ifNil: 'no group'.
 ]
 
 { #category : #accessing }
-Breakpoint >> group: aString [
-	"puts a new groupname in the properties dictionary"
-	
-	^ self property: #Group put: aString.
+Breakpoint >> group: aBreakpointGroup [
+	"puts the breakpoint in a new group"
+	"group removeBreakpoint: self.
+	aBreakpointGroup addBreakpoint: self."
+	^ group := aBreakpointGroup.
 ]
 
 { #category : #api }
 Breakpoint >> groupTo: aString [
 	"API to change the group"
-	aString class = ByteString ifFalse: [Error signal: 'group has to be a string'].
-	self group: aString.
+	
+	self group: aString. "(BreakpointGroup getGroup: aString)."
 
 ]
 
 { #category : #'as yet unclassified' }
 Breakpoint >> increaseCount [
 
-	properties at: #count put: (self count + 1).
-	^self count
+	^self count: (self count + 1).
 ]
 
 { #category : #initialization }
 Breakpoint >> initialize [
 	
 	self class initializeSlots: self.
-	options := #(+ optionCompileOnLinkInstallation).
-	properties := Dictionary new.
-	properties at: #Group put: 'no group'.
+	options := #(+ optionCompileOnLinkInstallation)
 ]
 
 { #category : #install }
@@ -375,12 +381,6 @@ Breakpoint >> isEnabled [
 Breakpoint >> isObjectCentric [
 
 	^ self targetInstance notNil
-]
-
-{ #category : #testing }
-Breakpoint >> isOnCount [
-
-	^ onCount ifNil: [ onCount := false ]
 ]
 
 { #category : #testing }
@@ -425,6 +425,18 @@ Breakpoint >> node: aNode [
 	node := aNode
 ]
 
+{ #category : #testing }
+Breakpoint >> onCount [
+
+	^ onCount ifNil: [ onCount := false ]
+]
+
+{ #category : #testing }
+Breakpoint >> onCount: aBoolean [
+
+	^ onCount := aBoolean
+]
+
 { #category : #api }
 Breakpoint >> once [
 
@@ -438,6 +450,12 @@ Breakpoint >> oneShot [
 ]
 
 { #category : #accessing }
+Breakpoint >> oneShot: aBoolean [
+
+	^ oneShot := aBoolean 
+]
+
+{ #category : #accessing }
 Breakpoint >> options [
 
 	^ options
@@ -447,24 +465,6 @@ Breakpoint >> options [
 Breakpoint >> options: anArray [
 
 	options := anArray
-]
-
-{ #category : #accessing }
-Breakpoint >> properties [
-	^ properties
-
-]
-
-{ #category : #accessing }
-Breakpoint >> property: aSymbol [
-	^ properties at: aSymbol.
-
-]
-
-{ #category : #accessing }
-Breakpoint >> property: aSymbol put: anObject [
-	^ properties at: aSymbol put: anObject.
-
 ]
 
 { #category : #removing }
@@ -491,12 +491,6 @@ Breakpoint >> removeFromMethod: aMethod [
 Breakpoint >> removeFromNodeProperty [
 
 	self node removeBreakpoint: self
-]
-
-{ #category : #accessing }
-Breakpoint >> removeProperty: aSymbol [
-	^ properties removeKey: aSymbol .
-
 ]
 
 { #category : #api }

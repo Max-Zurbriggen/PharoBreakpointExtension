@@ -12,19 +12,6 @@ Class {
 	#category : #BreakpointBrowser
 }
 
-{ #category : #layout }
-BreakpointBrowserPresenter class >> defaultLayout [
-
-	^ 	SpPanedLayout newTopToBottom
-		  add: (SpPanedLayout newHorizontal
-				   positionOfSlider: 17 percent;
-				   add: #bpGroupsList;
-				   add: #breakpointsTable;
-				   yourself);
-		  add: #methodCode;
-		  yourself
-]
-
 { #category : #specs }
 BreakpointBrowserPresenter class >> menuCommandOn: aBuilder [
 
@@ -44,33 +31,39 @@ BreakpointBrowserPresenter >> breakpointContextMenu [
 	^ self newMenu
 		addGroup: [ :aGroup | 
 			aGroup
-				addItem: [ :anItem | 
+				addItem: [ :anItem | 	anItem
+					name: 'edit breakpoint';
+					description: 'Opens a window to edit this breakpoint';
+					action: [ 
+						BreakpointEditor new open; selectBreakpoint: (breakpointsTable selectedItem) ] ];
+"				addItem: [ :anItem | 
 					anItem
 						name: 'Change group';
 						description: 'Opens a window to change the group of this breakpoint';
 						action: [ 
 							self changeBreakpointGroup: (breakpointsTable selectedItem ).  
 							self updateBreakpointGroups.
-							breakpointsTable refresh.] ];
-				addItem: [ :anItem | 
-					anItem
-						name: 'Remove';
-						description: 'Remove this breakpoint';
-						action: [ breakpointsTable selectedItem remove. 
-							self updateBreakpointGroups.
-							breakpointsTable refresh. ] ];
-				addItem: [ :anItem | 
-					anItem
-						name: 'Enable';
-						description: 'Enable this breakpoint';
-						visibleIf: [ breakpointsTable selectedItem isEnabled not];
-						action: [ breakpointsTable selectedItem enable. breakpointsTable refresh. ] ];
-				addItem: [ :anItem | 
-					anItem
-						name: 'Disable';
-						description: 'Disable this breakpoint';
-						visibleIf: [ breakpointsTable selectedItem isEnabled ];
-						action: [ breakpointsTable selectedItem disable. breakpointsTable refresh. ] ].
+							breakpointsTable refresh.] ];"
+				addItem: [ :anItem | anItem
+					name: 'Remove';
+					description: 'Remove this breakpoint';
+					action: [ breakpointsTable selectedItem remove. 
+						self updateBreakpointGroups.
+						breakpointsTable refresh. ] ];
+				addItem: [ :anItem | anItem
+					name: 'Enable';
+					description: 'Enable this breakpoint';
+					enabled: [ breakpointsTable selectedItem isEnabled not];
+					action: [ 
+						breakpointsTable selectedItem enabled: true. 
+						breakpointsTable refresh. ] ];
+				addItem: [ :anItem | anItem
+					name: 'Disable';
+					description: 'Disable this breakpoint';
+					enabled: [ breakpointsTable selectedItem isEnabled ];
+					action: [ 
+						breakpointsTable selectedItem enabled: false. 
+						breakpointsTable refresh. ] ].
 			]
 ]
 
@@ -85,14 +78,23 @@ BreakpointBrowserPresenter >> buildTableData: group [
 { #category : #'ui - dialogs' }
 BreakpointBrowserPresenter >> changeBreakpointGroup: aBreakpoint [
 	"popup to change the group of a breakpoint"
+	"to be removed"
 	
 	| textInput |
+	textInput := aBreakpoint group.
+	textInput := self application newRequestText 
+		request: 'Enter new group for this breakpoint:';
+		text: textInput;
+		title: 'Enter group name'.
+	textInput isEmptyOrNil ifFalse: [ aBreakpoint group: textInput ].
+	
+	"| textInput |
 	textInput := aBreakpoint group.
 	textInput := UIManager default 
 		request: 'Enter new name for this script:'
 		initialAnswer: textInput
 		title: 'Enter group name'.
-	textInput isEmptyOrNil ifFalse: [ aBreakpoint group: textInput ].
+	textInput isEmptyOrNil ifFalse: [ aBreakpoint group: textInput ]."
 
 	"alternative popup:"
 
@@ -106,6 +108,19 @@ BreakpointBrowserPresenter >> changeBreakpointGroup: aBreakpoint [
 	label: 'enter new group name for this breakpoint';
 	onAccept: [aBreakpoint group: (textInput text)];
 	openModal."
+]
+
+{ #category : #layout }
+BreakpointBrowserPresenter >> defaultLayout [
+
+	^ 	SpPanedLayout newTopToBottom
+		  add: (SpPanedLayout newHorizontal
+				   positionOfSlider: 17 percent;
+				   add: bpGroupsList;
+				   add: breakpointsTable;
+				   yourself);
+		  add: methodCode;
+		  yourself
 ]
 
 { #category : #private }
@@ -125,6 +140,19 @@ BreakpointBrowserPresenter >> getBreakpointClass: aBreakpoint [
 BreakpointBrowserPresenter >> getBreakpointTarget: aBreakpoint [
 	"returns the target of a breakpoint"
 	^ aBreakpoint printTargetForBreakpointInspection.
+
+]
+
+{ #category : #initialization }
+BreakpointBrowserPresenter >> initialize [
+
+	super initialize.
+	SystemAnnouncer uniqueInstance weak when: BreakpointAdded send: #updateBreakpointGroups to: self.
+	SystemAnnouncer uniqueInstance weak when: BreakpointRemoved send: #updateBreakpointGroups to: self.
+		
+	
+
+		
 
 ]
 
@@ -185,14 +213,14 @@ BreakpointBrowserPresenter >> initializePresenters [
 	self initializeBreakpointTable.
 	
 	self updateBreakpointGroups.
-		
+
 	methodCode := self newCode 
 		beNotEditable
 		yourself.
 		
+		
 	
-	SystemAnnouncer uniqueInstance weak when: BreakpointAdded send: #updateBreakpointGroups to: self.
-	SystemAnnouncer uniqueInstance weak when: BreakpointRemoved send: #updateBreakpointGroups to: self.
+
 ]
 
 { #category : #initialization }
@@ -222,8 +250,6 @@ BreakpointBrowserPresenter >> updateBreakpointGroups [
 BreakpointBrowserPresenter >> updateMethodSourceCode: aBreakpoint [
 	"updates the code window to display the code where the breakpoint is attached"
 	
-	"methodCode text: aBreakpoint printContentsForBreakpointInspection"
-	
 	aBreakpoint ifNil:  [^self].
 	
 	aBreakpoint isVariableBreakpoint 
@@ -237,6 +263,16 @@ BreakpointBrowserPresenter >> updateMethodSourceCode: aBreakpoint [
 			methodCode text: aBreakpoint node methodNode method sourceCode.
 			methodCode beForBehavior:	aBreakpoint node methodNode method ]
 	
+	
+	"estebans code (to be implemented):"
+"	 aBreakpoint ifNil:  [^self].
+    
+    methodCode 
+        beForMethod: aBreakpoint node compiledMethod;
+        text: aBreakpoint printContentsForBreakpointInspection;
+        addTextSegmentDecoration:  (SpTextPresenterDecorator forHighlight
+            interval: (1 to: 10);
+            yourself)"
 	
 	
 
