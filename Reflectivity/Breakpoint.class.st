@@ -311,12 +311,12 @@ Breakpoint >> count: anInteger [
 
 { #category : #api }
 Breakpoint >> disable [
-	enabled := false
+	self enabled: false
 ]
 
 { #category : #api }
 Breakpoint >> enable [
-	enabled := true
+	self enabled: true
 ]
 
 { #category : #api }
@@ -327,7 +327,7 @@ Breakpoint >> enabled: aBoolean [
 { #category : #accessing }
 Breakpoint >> group [
 	"returns the group of the breakpoint. group is a value in the properties variable"
-	^ group ifNil: 'no group'.
+	^ group ifNil: ['no group'].
 ]
 
 { #category : #accessing }
