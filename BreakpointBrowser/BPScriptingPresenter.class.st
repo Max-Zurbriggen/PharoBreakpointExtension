@@ -32,23 +32,12 @@ BPScriptingPresenter >> changeScriptName: aScript [
 	| textInput |
 	textInput := 'new script name'.
 	textInput := self application newRequestText
-		request: 'Enter new name for this script:'
-		initialAnswer: textInput
-		title: 'Enter new script name'.
+		label: 'Enter new name for this script:';
+		text: textInput;
+		title: 'Enter new script name';
+		openModal.
 	textInput isEmptyOrNil ifFalse: [ aScript name: textInput ].
 	
-	"alternative popup:"
-	
-	"| textInput |
-	textInput := SpRequestTextDialog new.
-	textInput 
-	title: 'Enter script name';
-	extent: 300 @ 160;
-	text: aScript name;
-	acceptLabel: 'Accept';
-	label: 'enter new name for this script';
-	onAccept: [aScript name: (textInput text)];
-	openModal."
 ]
 
 { #category : #initialization }

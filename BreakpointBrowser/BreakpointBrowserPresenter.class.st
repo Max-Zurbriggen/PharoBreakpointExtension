@@ -6,6 +6,7 @@ Class {
 	#superclass : #SpPresenter,
 	#instVars : [
 		'bpGroupsList',
+		'groupsButtonToolbar',
 		'methodCode',
 		'breakpointsTable'
 	],
@@ -70,9 +71,10 @@ BreakpointBrowserPresenter >> breakpointContextMenu [
 { #category : #private }
 BreakpointBrowserPresenter >> buildTableData: group [
 	"set the items of the breakpoints table to match the selected group"
-	^ group = 'All' 
-		ifTrue: [ ^breakpointsTable items: Breakpoint all. ]
-		ifFalse: [ ^breakpointsTable items: (Breakpoint all select: [ :bp | bp group = group ] ). ]
+
+	group ifNil: [ ^ BreakpointGroup allBreakpointsGroup breakpoints ].
+	breakpointsTable items: group breakpoints.
+	
 ]
 
 { #category : #'ui - dialogs' }
@@ -116,11 +118,38 @@ BreakpointBrowserPresenter >> defaultLayout [
 	^ 	SpPanedLayout newTopToBottom
 		  add: (SpPanedLayout newHorizontal
 				   positionOfSlider: 17 percent;
-				   add: bpGroupsList;
+				   add: (SpBoxLayout newTopToBottom 
+						add: bpGroupsList;
+						add: groupsButtonToolbar; "here should the interface be to edit groups somehow"
+						yourself );
 				   add: breakpointsTable;
 				   yourself);
 		  add: methodCode;
 		  yourself
+]
+
+{ #category : #initialization }
+BreakpointBrowserPresenter >> doDeleteGroup [
+
+	bpGroupsList selection selectedItem remove.
+	bpGroupsList refresh.
+	breakpointsTable refresh.
+]
+
+{ #category : #initialization }
+BreakpointBrowserPresenter >> doNewGroup [
+
+	| textInput |
+	textInput := self application newRequestText 
+		label: 'Enter name of a new breakpoint group:';
+		text: '';
+		title: 'Enter new group name';
+		validateAnswer: [ :answer | answer isEmptyOrNil not ];
+		openModal.
+	textInput isEmptyOrNil ifFalse: [ BreakpointGroup new name: textInput ].
+	bpGroupsList refresh.
+
+	
 ]
 
 { #category : #private }
@@ -161,6 +190,7 @@ BreakpointBrowserPresenter >> initializeBreakpointTable [
 	"creates a table of breakpoints with some of their properties"
 
 	breakpointsTable := self newTable.
+	breakpointsTable dragEnabled: true.
 	breakpointsTable 
 		addColumn:
 			((SpCheckBoxTableColumn
@@ -188,7 +218,7 @@ BreakpointBrowserPresenter >> initializeBreakpointTable [
 		addColumn:
 			((SpStringTableColumn
 				title: 'Group'
-				evaluated: [ :item | item group]) 
+				evaluated: [ :item | item group name]) 
 				width: 100; 
 				yourself);
 		contextMenu: self breakpointContextMenu.
@@ -197,21 +227,50 @@ BreakpointBrowserPresenter >> initializeBreakpointTable [
 ]
 
 { #category : #initialization }
+BreakpointBrowserPresenter >> initializeGroupButtonToolbar [
+
+	groupsButtonToolbar := self newToolbar
+		addItem: (SpToolbarButtonPresenter new
+			label: 'New';
+			icon: (self iconNamed: #smallNew);
+			help: 'create a new script';
+			action: [ self doNewGroup ];
+			yourself);
+		addItem: (SpToolbarButtonPresenter new
+			label: 'Delete';
+			icon: (self iconNamed: #smallDelete);
+			help: 'delete the selected script';
+			action: [ self doDeleteGroup ];
+			
+			yourself);
+
+		yourself.
+]
+
+{ #category : #initialization }
 BreakpointBrowserPresenter >> initializeGroups [
 	"initializes the breakpoint groups list"
 	bpGroupsList := self newList
 		headerTitle: 'Breakpoint Groups';
+		display: [ :bpg | bpg name ];
 		whenSelectionChangedDo: [ :selection | 
 			self updateBreakpointGroups.
 			self buildTableData: selection selectedItem "breakpointsTable refresh." ];
-		yourself
+		yourself.
+	bpGroupsList dropEnabled: true.
+	bpGroupsList wantsDrop: [ :s | ((s passenger at:1) isKindOf: Breakpoint) and: (s index ~= 1) ].
+	bpGroupsList acceptDrop: [ :s | 
+		(s passenger at:1) group: (BreakpointGroup all at:(s index)). 
+		bpGroupsList refresh.
+		breakpointsTable refresh.]
+		
 ]
 
 { #category : #initialization }
 BreakpointBrowserPresenter >> initializePresenters [
 	self initializeGroups.
 	self initializeBreakpointTable.
-	
+	self initializeGroupButtonToolbar.
 	self updateBreakpointGroups.
 
 	methodCode := self newCode 
@@ -234,16 +293,10 @@ BreakpointBrowserPresenter >> initializeWindow: aWindowPresenter [
 
 { #category : #updating }
 BreakpointBrowserPresenter >> updateBreakpointGroups [
-	"updates the list of breakpoint groups and adds 'All' as an option"
-	| groups |
-
-	groups := (Breakpoint all collect: [ :bp | bp group ]) removeDuplicates.
-	groups addFirst: 'All'.
-	bpGroupsList items: groups.
-	bpGroupsList selectIndex: 1.
+	"updates the list of breakpoint groups"
 	
-
-
+	bpGroupsList items: BreakpointGroup all.
+	bpGroupsList selectIndex: 1.
 ]
 
 { #category : #updating }

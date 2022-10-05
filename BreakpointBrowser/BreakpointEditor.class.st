@@ -55,7 +55,7 @@ BreakpointEditor >> initializePresenters [
 	oncountCheckbox := self newCheckBox state: false.
 	currentCountTextbox := self newNumberInput beInteger.
 	breakOnCountTextbox := self newNumberInput beInteger.
-	groupTextbox := self newTextInput.
+	groupTextbox := self newTextInput editable: false.
 	conditionCheckbox := self newCheckBox state: false; enabled: false .
 	conditionTextbox := self newTextInput editable: false .
 	
@@ -70,7 +70,7 @@ BreakpointEditor >> initializeSaveChanges [
 	oncountCheckbox whenChangedDo: [ :s | breakpoint onCount: s ].
 	currentCountTextbox whenTextChangedDo: [ :state | breakpoint count: state ].
 	breakOnCountTextbox whenTextChangedDo: [ :state | breakpoint breakOnCount: state ].
-	groupTextbox whenTextChangedDo: [ :text | breakpoint group: text ].
+	"groupTextbox whenTextChangedDo: [ :text | breakpoint group: text ]." "disabled because groups cannot be changed like this"
 	"conditions not yet implemented"
 ]
 
@@ -100,7 +100,7 @@ BreakpointEditor >> update [
 	oncountCheckbox state: breakpoint onCount.
 	currentCountTextbox number: breakpoint count.
 	breakOnCountTextbox number: breakpoint breakOnCount.
-	groupTextbox text: breakpoint group.
+	groupTextbox text: breakpoint group name.
 	"conditionCheckbox state: breakpoint ???."
 	"conditionTextbox text: (breakpoint condition)."
 ]

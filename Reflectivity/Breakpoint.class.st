@@ -326,24 +326,16 @@ Breakpoint >> enabled: aBoolean [
 
 { #category : #accessing }
 Breakpoint >> group [
-	"returns the group of the breakpoint. group is a value in the properties variable"
-	^ group ifNil: ['no group'].
-]
-
-{ #category : #accessing }
-Breakpoint >> group: aBreakpointGroup [
-	"puts the breakpoint in a new group"
-	"group removeBreakpoint: self.
-	aBreakpointGroup addBreakpoint: self."
-	^ group := aBreakpointGroup.
+	"returns the group of the breakpoint"
+	^ group.
 ]
 
 { #category : #api }
-Breakpoint >> groupTo: aString [
-	"API to change the group"
-	
-	self group: aString. "(BreakpointGroup getGroup: aString)."
-
+Breakpoint >> group: aBreakpointGroup [
+	"puts the breakpoint in a new group and sets the group variable to that group"
+	group removeBreakpoint: self.
+	aBreakpointGroup addBreakpoint: self.
+	^ group := aBreakpointGroup.
 ]
 
 { #category : #'as yet unclassified' }
@@ -356,7 +348,10 @@ Breakpoint >> increaseCount [
 Breakpoint >> initialize [
 	
 	self class initializeSlots: self.
-	options := #(+ optionCompileOnLinkInstallation)
+	options := #(+ optionCompileOnLinkInstallation).
+	BreakpointGroup newBreakpoint: self.
+	group := BreakpointGroup ungroupedBreakpointsGroup.
+
 ]
 
 { #category : #install }
@@ -471,6 +466,8 @@ Breakpoint >> options: anArray [
 Breakpoint >> remove [
 
 	self removeFromNodeProperty.
+	self group removeBreakpoint: self.
+	BreakpointGroup allBreakpointsGroup removeBreakpoint: self.
 	self class removeBreakpoint: self.
 	link uninstall
 ]
